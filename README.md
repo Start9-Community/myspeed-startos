@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" alt="MySpeed Logo" width="21%">
+  <img src="icon.svg" alt="MySpeed Logo" width="21%">
 </p>
 
 # MySpeed on StartOS
