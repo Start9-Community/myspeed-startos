@@ -7,7 +7,7 @@
 > **Upstream docs:** <https://docs.myspeed.dev/>
 >
 > Everything not listed in this document should behave the same as upstream
-> MySpeed v1.0.9. If a feature, setting, or behavior is not mentioned
+> MySpeed. If a feature, setting, or behavior is not mentioned
 > here, the upstream documentation is accurate and fully applicable.
 
 MySpeed is a speed test analysis software that records your internet speed for up to 30 days. It automates speed tests using Cron expressions and generates clear statistics on speed, ping, and more. See the [upstream repo](https://github.com/gnmyt/myspeed) for general MySpeed documentation.
@@ -36,7 +36,7 @@ MySpeed is a speed test analysis software that records your internet speed for u
 
 | Property | Value |
 |----------|-------|
-| Image | Custom Dockerfile extending `germannewsmaker/myspeed:1.0.9` |
+| Image | Custom Dockerfile extending `germannewsmaker/myspeed` |
 | Architectures | x86_64, aarch64 |
 | Entrypoint | `tini -- node server` |
 
@@ -130,8 +130,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development wo
 
 ```yaml
 package_id: my-speed
-upstream_version: "1.0.9"
-image: custom Dockerfile (germannewsmaker/myspeed:1.0.9 + tini)
+image: custom Dockerfile (germannewsmaker/myspeed + tini)
 architectures: [x86_64, aarch64]
 volumes:
   main: /myspeed/data
