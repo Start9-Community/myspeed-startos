@@ -1,142 +1,148 @@
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![Release][release-shield]][release-url]
+<p align="center">
+  <img src="icon.svg" alt="MySpeed Logo" width="21%">
+</p>
 
-<br />
-<div align="center">
-  <a href="https://github.com/gnmyt/myspeed">
-    <img src="https://i.imgur.com/aCmA6rH.png" alt="Logo" width="80" height="80">
-  </a>
-  <h3>MySpeed <a href="README.de.md">🇩🇪</a> <a href="README.md">🇺🇸</a></h3>
-</div>
+# MySpeed on StartOS
 
+> **Upstream docs:** <https://docs.myspeed.dev/>
+>
+> Everything not listed in this document should behave the same as upstream
+> MySpeed. If a feature, setting, or behavior is not mentioned
+> here, the upstream documentation is accurate and fully applicable.
 
-## 🤔 What is MySpeed?
+MySpeed is a speed test analysis software that records your internet speed for up to 30 days. It automates speed tests using Cron expressions and generates clear statistics on speed, ping, and more. See the [upstream repo](https://github.com/gnmyt/myspeed) for general MySpeed documentation.
 
-MySpeed is a speed test analysis software that records your internet speed for up to 30 days.
+---
 
-### ⭐ Features
+## Table of Contents
 
-- 📊 MySpeed generates clear statistics on speed, ping, and more
-- ⏰ MySpeed automates speed tests and allows you to set the time between tests using Cron expressions
-- 🗄️ Add multiple servers directly to a MySpeed instance
-- 🩺 Configure health checks to notify you via email, Signal, WhatsApp, or Telegram in case of errors or downtime
-- 📆 Test results can be stored for up to 30 days
-- 🔥 Support for Prometheus and Grafana
-- 🗳️ Choose between Ookla, LibreSpeed and Cloudflare speed test servers
-- 💁 Learn more about MySpeed on our [website](https://myspeed.dev)
+- [Image and Container Runtime](#image-and-container-runtime)
+- [Volume and Data Layout](#volume-and-data-layout)
+- [Installation and First-Run Flow](#installation-and-first-run-flow)
+- [Configuration Management](#configuration-management)
+- [Network Access and Interfaces](#network-access-and-interfaces)
+- [Actions](#actions-startos-ui)
+- [Backups and Restore](#backups-and-restore)
+- [Health Checks](#health-checks)
+- [Dependencies](#dependencies)
+- [Limitations and Differences](#limitations-and-differences)
+- [What Is Unchanged from Upstream](#what-is-unchanged-from-upstream)
+- [Contributing](#contributing)
+- [Quick Reference for AI Consumers](#quick-reference-for-ai-consumers)
+
+---
+
+## Image and Container Runtime
+
+| Property | Value |
+|----------|-------|
+| Image | Custom Dockerfile extending `germannewsmaker/myspeed` |
+| Architectures | x86_64, aarch64 |
+| Entrypoint | `tini -- node server` |
+
+The custom Dockerfile adds [tini](https://github.com/krallin/tini) as an init process to handle SIGTERM signals for clean shutdown. The upstream image does not handle signals gracefully on its own.
+
+## Volume and Data Layout
+
+| Volume | Mount Point | Purpose |
+|--------|-------------|---------|
+| `main` | `/myspeed/data` | All MySpeed data (SQLite database, configuration) |
+
+## Installation and First-Run Flow
+
+1. MySpeed starts with a fresh SQLite database
+2. On first visit to the web UI, a **welcome dialog** is displayed where you can configure initial settings and set a password
+3. Speed tests begin automatically based on the default Cron schedule
+
+No StartOS-specific setup steps are required. All configuration is done through MySpeed's own web UI.
+
+## Configuration Management
+
+All MySpeed settings are managed through the **upstream web UI** — there are no StartOS-managed settings or actions.
+
+Settings available in the MySpeed UI include:
+
+| Category | Settings |
+|----------|----------|
+| **Speed Test** | Test provider (Ookla, LibreSpeed, Cloudflare), server selection, Cron schedule, data retention period |
+| **Network** | Interface selection for speed tests |
+| **Notifications** | Discord, Gotify, Pushover, Telegram, webhooks, health check monitoring |
+| **Monitoring** | Prometheus metrics endpoint, Grafana integration |
+| **Security** | Admin password |
+
+## Network Access and Interfaces
+
+| Interface | Port | Protocol | Purpose |
+|-----------|------|----------|---------|
+| Web UI | 5216 | HTTP | MySpeed dashboard and settings |
+
+## Actions (StartOS UI)
+
+None. MySpeed is fully managed through its own web interface.
+
+## Backups and Restore
+
+**Backed up:** The entire `main` volume, including the SQLite database and all configuration.
+
+**Restore behavior:** Restoring overwrites current data with the backup copy, including speed test history and settings.
+
+## Health Checks
+
+| Check | Method | Grace Period | Messages |
+|-------|--------|-------------|----------|
+| **Web Interface** | `checkPortListening` on port 5216 | 30 seconds | Ready: "The web interface is ready" |
+
+The 30-second grace period accommodates MySpeed's startup time, during which it loads integrations and performs network discovery.
 
 ## Dependencies
 
-Install the system dependencies below to build this project by following the instructions in the provided links. You can also find detailed steps to setup your environment in the service packaging [documentation](https://docs.start9.com/latest/developer-docs/packaging#development-environment).
+None. MySpeed is a standalone service.
 
-- [docker](https://docs.docker.com/get-docker)
-- [docker-buildx](https://docs.docker.com/buildx/working-with-buildx/)
-- [yq](https://mikefarah.gitbook.io/yq)
-- [deno](https://deno.land/)
-- [make](https://www.gnu.org/software/make/)
-- [start-sdk](https://github.com/Start9Labs/start-os/tree/sdk)
+## Limitations and Differences
 
-## Cloning
+1. **Custom Dockerfile with tini** — adds an init process for proper signal handling; the upstream image does not handle SIGTERM gracefully
+2. **No StartOS-managed configuration** — all settings (password, test schedule, notifications, etc.) are configured through MySpeed's own web UI
+3. **No password reset action** — if the admin password is forgotten, the only recovery method is clearing it from the SQLite database
+4. **Speed test accuracy** — tests run through the container's network stack, which may differ slightly from bare-metal results
+5. **Subsequent startups may be slow** — MySpeed performs network discovery and integration loading on each start, which can take 15–25 seconds
 
-Clone the package repository locally.
+## What Is Unchanged from Upstream
 
+- Speed test execution (Ookla, LibreSpeed, Cloudflare)
+- Statistics dashboard and data visualization
+- Cron-based test scheduling
+- Multi-server support
+- Notification integrations (Discord, Gotify, Pushover, Telegram, webhooks)
+- Health check monitoring (email, Signal, WhatsApp, Telegram)
+- Prometheus metrics endpoint
+- Grafana integration
+- Admin password protection
+- Data retention settings
+- SQLite database storage
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development workflow.
+
+---
+
+## Quick Reference for AI Consumers
+
+```yaml
+package_id: my-speed
+image: custom Dockerfile (germannewsmaker/myspeed + tini)
+architectures: [x86_64, aarch64]
+volumes:
+  main: /myspeed/data
+ports:
+  ui: 5216
+dependencies: none
+startos_managed_files: none
+actions: none
+health_checks:
+  - checkPortListening:5216: web_interface (30s grace period)
+backup_volumes:
+  - main (full volume)
+configuration: upstream web UI only
+auth: password set via upstream web UI welcome dialog
 ```
-git clone https://github.com/j34g/MySpeed-Start9.git
-cd MySpeed-Start9
-```
-
-## Building
-
-To build the service as a universal package, run the following command:
-
-```
-make
-```
-
-Alternatively the package can be built for individual architectures by specifying the architecture as follows:
-
-```
-make x86
-```
-
-or
-
-```
-make arm
-```
-
-## Installing (on StartOS)
-
-Before installation, define `host: https://server-name.local` in your `~/.embassy/config.yaml` config file then run the following commands to determine successful install:
-
-> Change server-name.local to your Start9 server address
-
-```
-start-cli auth login
-#Enter your StartOS password
-make install
-```
-
-**Tip:** You can also install the myspeed.s9pk by sideloading it under the **StartOS > System > Sideload a Service** section.
-
-## Verify Install
-
-Go to your StartOS Services page, select **MySpeed** and start the service.
-
-**Done!**
-### 📸 Example Screenshots
-
-#### Homepage (List View)
-
-<img src="https://i.imgur.com/NHX7Ba9.png" alt="Homepage">
-
-#### Homepage (Statistics View)
-<img src="https://i.imgur.com/5JAFgrk.png" alt="Statistics">
-
-#### Server Selection
-
-<img src="https://i.imgur.com/hgOR93G.png" alt="Server Selection">
-
-#### Dropdown Menu
-
-<img src="https://i.imgur.com/alKEMrg.png" alt="Dropdown Menu">
-
-#### Page During a Speed Test
-
-<img src="https://i.imgur.com/kxsrjIe.png" alt="Page During a Speed Test">
-
-## Convinced?
-
-Great, let's get started! You can find the installation instructions for Linux (and Windows) at the top under Installation.
-
-## License
-
-Distributed under the MIT license. See `LICENSE` for more information.
-
-[contributors-shield]: https://img.shields.io/github/contributors/gnmyt/myspeed.svg?style=for-the-badge
-
-[contributors-url]: https://github.com/gnmyt/myspeed/graphs/contributors
-
-[forks-shield]: https://img.shields.io/github/forks/gnmyt/myspeed.svg?style=for-the-badge
-
-[forks-url]: https://github.com/gnmyt/myspeed/network/members
-
-[stars-shield]: https://img.shields.io/github/stars/gnmyt/myspeed.svg?style=for-the-badge
-
-[stars-url]: https://github.com/gnmyt/myspeed/stargazers
-
-[issues-shield]: https://img.shields.io/github/issues/gnmyt/myspeed.svg?style=for-the-badge
-
-[issues-url]: https://github.com/gnmyt/myspeed/issues
-
-[license-shield]: https://img.shields.io/github/license/gnmyt/myspeed.svg?style=for-the-badge
-
-[license-url]: https://github.com/gnmyt/myspeed/blob/master/LICENSE
-
-[release-shield]: https://img.shields.io/github/v/release/gnmyt/myspeed.svg?style=for-the-badge
-
-[release-url]: https://github.com/gnmyt/myspeed/releases/latest
