@@ -5,7 +5,7 @@ export const manifest = setupManifest({
   id: 'my-speed',
   title: 'MySpeed',
   license: 'MIT',
-  packageRepo: 'https://github.com/Start9Labs/myspeed-startos/tree/update/040',
+  packageRepo: 'https://github.com/Start9Labs/myspeed-startos',
   upstreamRepo: 'https://github.com/gnmyt/myspeed',
   marketingUrl: 'https://myspeed.dev/',
   donationUrl: 'https://ko-fi.com/gnmyt',
