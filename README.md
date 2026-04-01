@@ -137,7 +137,7 @@ volumes:
 ports:
   ui: 5216
 dependencies: none
-startos_managed_files: none
+startos_managed_env_vars: none
 actions: none
 health_checks:
   - checkPortListening:5216: web_interface (30s grace period)
