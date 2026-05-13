@@ -9,7 +9,6 @@ export const manifest = setupManifest({
   upstreamRepo: 'https://github.com/gnmyt/myspeed',
   marketingUrl: 'https://myspeed.dev/',
   donationUrl: 'https://ko-fi.com/gnmyt',
-  docsUrls: ['https://docs.myspeed.dev/'],
   description: { short, long },
   volumes: ['main'],
   images: {
