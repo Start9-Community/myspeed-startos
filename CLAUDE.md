@@ -1,3 +1,3 @@
-## How the upstream version is pulled
-- Image is `dockerBuild` from root
-- Check `Dockerfile` for upstream version reference (FROM or ARG)
+# CLAUDE.md
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the doc map and contribution workflow.
