@@ -34,18 +34,18 @@ MySpeed is a speed test analysis software that records your internet speed for u
 
 ## Image and Container Runtime
 
-| Property | Value |
-|----------|-------|
-| Image | Custom Dockerfile extending `germannewsmaker/myspeed` |
-| Architectures | x86_64, aarch64 |
-| Entrypoint | `tini -- node server` |
+| Property      | Value                                                 |
+| ------------- | ----------------------------------------------------- |
+| Image         | Custom Dockerfile extending `germannewsmaker/myspeed` |
+| Architectures | x86_64, aarch64                                       |
+| Entrypoint    | `tini -- node server`                                 |
 
 The custom Dockerfile adds [tini](https://github.com/krallin/tini) as an init process to handle SIGTERM signals for clean shutdown. The upstream image does not handle signals gracefully on its own.
 
 ## Volume and Data Layout
 
-| Volume | Mount Point | Purpose |
-|--------|-------------|---------|
+| Volume | Mount Point     | Purpose                                           |
+| ------ | --------------- | ------------------------------------------------- |
 | `main` | `/myspeed/data` | All MySpeed data (SQLite database, configuration) |
 
 ## Installation and First-Run Flow
@@ -62,19 +62,19 @@ All MySpeed settings are managed through the **upstream web UI** — there are n
 
 Settings available in the MySpeed UI include:
 
-| Category | Settings |
-|----------|----------|
-| **Speed Test** | Test provider (Ookla, LibreSpeed, Cloudflare), server selection, Cron schedule, data retention period |
-| **Network** | Interface selection for speed tests |
-| **Notifications** | Discord, Gotify, Pushover, Telegram, webhooks, health check monitoring |
-| **Monitoring** | Prometheus metrics endpoint, Grafana integration |
-| **Security** | Admin password |
+| Category          | Settings                                                                                              |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| **Speed Test**    | Test provider (Ookla, LibreSpeed, Cloudflare), server selection, Cron schedule, data retention period |
+| **Network**       | Interface selection for speed tests                                                                   |
+| **Notifications** | Discord, Gotify, Pushover, Telegram, webhooks, health check monitoring                                |
+| **Monitoring**    | Prometheus metrics endpoint, Grafana integration                                                      |
+| **Security**      | Admin password                                                                                        |
 
 ## Network Access and Interfaces
 
-| Interface | Port | Protocol | Purpose |
-|-----------|------|----------|---------|
-| Web UI | 5216 | HTTP | MySpeed dashboard and settings |
+| Interface | Port | Protocol | Purpose                        |
+| --------- | ---- | -------- | ------------------------------ |
+| Web UI    | 5216 | HTTP     | MySpeed dashboard and settings |
 
 ## Actions (StartOS UI)
 
@@ -88,9 +88,9 @@ None. MySpeed is fully managed through its own web interface.
 
 ## Health Checks
 
-| Check | Method | Grace Period | Messages |
-|-------|--------|-------------|----------|
-| **Web Interface** | `checkPortListening` on port 5216 | 30 seconds | Ready: "The web interface is ready" |
+| Check             | Method                            | Grace Period | Messages                            |
+| ----------------- | --------------------------------- | ------------ | ----------------------------------- |
+| **Web Interface** | `checkPortListening` on port 5216 | 30 seconds   | Ready: "The web interface is ready" |
 
 The 30-second grace period accommodates MySpeed's startup time, during which it loads integrations and performs network discovery.
 
@@ -122,7 +122,7 @@ None. MySpeed is a standalone service.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development workflow.
+Build and development workflow follow the StartOS packaging guide: <https://docs.start9.com/packaging>. Keep `README.md`, `instructions.md`, and `AGENTS.md` in sync with any change to user-visible behavior or package structure.
 
 ---
 
