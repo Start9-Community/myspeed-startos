@@ -1,16 +1,18 @@
 <p align="center">
-  <img src="icon.svg" alt="MySpeed Logo" width="21%">
+  <img src="icon.png" alt="MySpeed Logo" width="21%">
 </p>
 
 # MySpeed on StartOS
 
-> **Upstream docs:** <https://docs.myspeed.dev/>
->
 > Everything not listed in this document should behave the same as upstream
-> MySpeed. If a feature, setting, or behavior is not mentioned
-> here, the upstream documentation is accurate and fully applicable.
+> MySpeed. If a feature, setting, or behavior is not mentioned here, the
+> upstream documentation is accurate and fully applicable — see the
+> Documentation section of `instructions.md` for links.
 
-MySpeed is a speed test analysis software that records your internet speed for up to 30 days. It automates speed tests using Cron expressions and generates clear statistics on speed, ping, and more. See the [upstream repo](https://github.com/gnmyt/myspeed) for general MySpeed documentation.
+[MySpeed](https://github.com/gnmyt/myspeed) runs internet speed tests on a schedule and keeps the history, so you can see what your connection actually delivers over time. This package runs it with the speed-test binaries already in the image rather than fetched at first start.
+
+- **Upstream repo:** <https://github.com/gnmyt/myspeed>
+- **Wrapper repo:** <https://github.com/Start9-Community/myspeed-startos>
 
 ---
 
@@ -18,134 +20,135 @@ MySpeed is a speed test analysis software that records your internet speed for u
 
 - [Image and Container Runtime](#image-and-container-runtime)
 - [Volume and Data Layout](#volume-and-data-layout)
-- [Installation and First-Run Flow](#installation-and-first-run-flow)
-- [Configuration Management](#configuration-management)
-- [Network Access and Interfaces](#network-access-and-interfaces)
-- [Actions](#actions-startos-ui)
-- [Backups and Restore](#backups-and-restore)
-- [Health Checks](#health-checks)
+- [File Models](#file-models)
 - [Dependencies](#dependencies)
+- [Network Access and Interfaces](#network-access-and-interfaces)
+- [Installation and First-Run Flow](#installation-and-first-run-flow)
+- [Actions](#actions)
+- [Tasks](#tasks)
+- [Health Checks](#health-checks)
+- [Backups and Restore](#backups-and-restore)
 - [Limitations and Differences](#limitations-and-differences)
-- [What Is Unchanged from Upstream](#what-is-unchanged-from-upstream)
-- [Contributing](#contributing)
 - [Quick Reference for AI Consumers](#quick-reference-for-ai-consumers)
 
 ---
 
 ## Image and Container Runtime
 
-| Property      | Value                                                 |
-| ------------- | ----------------------------------------------------- |
-| Image         | Custom Dockerfile extending `germannewsmaker/myspeed` |
-| Architectures | x86_64, aarch64                                       |
-| Entrypoint    | `tini -- node server`                                 |
+One image, built here on top of a published MySpeed image.
 
-The custom Dockerfile adds [tini](https://github.com/krallin/tini) as an init process to handle SIGTERM signals for clean shutdown. The upstream image does not handle signals gracefully on its own.
+| Property      | Value                               |
+| ------------- | ----------------------------------- |
+| Image         | Built from this repo's `Dockerfile` |
+| Architectures | x86_64, aarch64                     |
+| Command       | The application, under `tini`       |
 
-It also bundles the Ookla and LibreSpeed CLI binaries into `/myspeed/bin` at build time, pinned by version and verified by SHA-256. Upstream downloads them on start and blocks the server from listening until that finishes, so an unreachable `install.speedtest.net` left the service permanently failing its health check. Both `speedtest` and `ookla` names are provided: MySpeed's loader probes `bin/ookla` but runs `bin/speedtest`.
+| Subcontainer | Purpose                                  |
+| ------------ | ---------------------------------------- |
+| `main`       | The only daemon — the one to `attach` to |
+
+**The build exists to bake in the speed-test CLIs.** The base image downloads Ookla's and LibreSpeed's clients on first start, which means the daemon hangs before it ever listens if either download is slow or blocked. Here they are fetched at build time from pinned release archives and **verified against a recorded SHA-256** — so the build fails rather than shipping an unexpected binary, and the runtime start does no downloading at all.
+
+The daemon runs with `runAsInit` so `tini` is PID 1 and reaps the short-lived test processes it spawns.
 
 ## Volume and Data Layout
 
-| Volume | Mount Point     | Purpose                                           |
-| ------ | --------------- | ------------------------------------------------- |
-| `main` | `/myspeed/data` | All MySpeed data (SQLite database, configuration) |
+One volume, holding everything.
 
-## Installation and First-Run Flow
+| Volume | Mount Point     | Purpose                                   |
+| ------ | --------------- | ----------------------------------------- |
+| `main` | `/myspeed/data` | The database — results, settings, account |
 
-1. MySpeed starts with a fresh SQLite database
-2. On first visit to the web UI, a **welcome dialog** is displayed where you can configure initial settings and set a password
-3. Speed tests begin automatically based on the default Cron schedule
+MySpeed keeps its whole state in a SQLite database on that volume: the test history, the schedule, the provider choice, the notification channels, and the admin password hash.
 
-No StartOS-specific setup steps are required. All configuration is done through MySpeed's own web UI.
+## File Models
 
-## Configuration Management
-
-All MySpeed settings are managed through the **upstream web UI** — there are no StartOS-managed settings or actions.
-
-Settings available in the MySpeed UI include:
-
-| Category          | Settings                                                                                              |
-| ----------------- | ----------------------------------------------------------------------------------------------------- |
-| **Speed Test**    | Test provider (Ookla, LibreSpeed, Cloudflare), server selection, Cron schedule, data retention period |
-| **Network**       | Interface selection for speed tests                                                                   |
-| **Notifications** | Discord, Gotify, Pushover, Telegram, webhooks, health check monitoring                                |
-| **Monitoring**    | Prometheus metrics endpoint, Grafana integration                                                      |
-| **Security**      | Admin password                                                                                        |
-
-## Network Access and Interfaces
-
-| Interface | Port | Protocol | Purpose                        |
-| --------- | ---- | -------- | ------------------------------ |
-| Web UI    | 5216 | HTTP     | MySpeed dashboard and settings |
-
-## Actions (StartOS UI)
-
-None. MySpeed is fully managed through its own web interface.
-
-## Backups and Restore
-
-**Backed up:** The entire `main` volume, including the SQLite database and all configuration.
-
-**Restore behavior:** Restoring overwrites current data with the backup copy, including speed test history and settings.
-
-## Health Checks
-
-| Check             | Method                            | Grace Period | Messages                            |
-| ----------------- | --------------------------------- | ------------ | ----------------------------------- |
-| **Web Interface** | `checkPortListening` on port 5216 | 30 seconds   | Ready: "The web interface is ready" |
-
-The 30-second grace period accommodates MySpeed's startup time, during which it loads integrations and performs network discovery.
+**None.** Nothing here is configured through a file this package manages — all of it is set inside MySpeed's own interface and stored in its database.
 
 ## Dependencies
 
-None. MySpeed is a standalone service.
+None.
+
+**The service does need internet**, since a speed test is a transfer against a remote server. Which servers depends on the provider chosen in the interface.
+
+## Network Access and Interfaces
+
+One interface.
+
+| Interface | Id   | Type | Port | Description               |
+| --------- | ---- | ---- | ---- | ------------------------- |
+| Web UI    | `ui` | ui   | 5216 | The MySpeed web interface |
+
+Bound on the `ui-multi` MultiHost over HTTP and not masked. **MySpeed's own login gates it** — the password set in the welcome dialog on first launch — and StartOS adds no gate of its own.
+
+Outbound, the service reaches whichever speed-test provider is selected, plus any notification service configured in the interface. **A speed test necessarily reveals your IP address to the provider** running the other end of it.
+
+## Installation and First-Run Flow
+
+Install does nothing beyond creating the volume: there is no seeding, no task, and no credential generated here.
+
+**The first-run setup is MySpeed's own.** Opening the interface presents a welcome dialog that sets the admin password and the initial preferences; tests begin on the schedule once it is completed.
+
+The service starts and reports healthy before that has happened — the check watches the port, and an unconfigured MySpeed is still serving.
+
+## Actions
+
+**None.** The package ships an empty action set: everything MySpeed does is configured from its own interface.
+
+That includes the admin password, which has one consequence worth knowing before it bites: **there is no reset action, and MySpeed has no in-app reset either**. Recovering from a lost password means clearing it out of the SQLite database on the volume by hand.
+
+## Tasks
+
+None. This package raises no tasks, so the service is never held on a prompt and its ordinary controls are always available.
+
+## Health Checks
+
+One check, on the only daemon.
+
+| Check     | Displayed as    | Method                 | Grace |
+| --------- | --------------- | ---------------------- | ----- |
+| `primary` | "Web Interface" | Port 5216 is listening | 30s   |
+
+It reports that the interface is serving. **It says nothing about the tests**: a failing provider, a broken schedule, or a connection that has been down for a week all show a green check, and are visible in the interface's own history.
+
+## Backups and Restore
+
+The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`, which is the SQLite database and therefore the entire application state.
+
+**The backup holds the full test history** along with the settings and the account, so a restore comes back with the graph intact rather than starting over. It also holds any notification credentials entered in the interface.
+
+Nothing in that state is tied to the server it ran on, so a restore needs no reconfiguration.
 
 ## Limitations and Differences
 
-1. **Custom Dockerfile with tini** — adds an init process for proper signal handling; the upstream image does not handle SIGTERM gracefully
-2. **No StartOS-managed configuration** — all settings (password, test schedule, notifications, etc.) are configured through MySpeed's own web UI
-3. **No password reset action** — if the admin password is forgotten, the only recovery method is clearing it from the SQLite database
-4. **Speed test accuracy** — tests run through the container's network stack, which may differ slightly from bare-metal results
-5. **Startup takes a few seconds** — MySpeed performs network discovery and integration loading on each start
-6. **Speed test CLIs are baked into the image** — Ookla 1.2.0 and LibreSpeed 1.0.10 ship in the image rather than being downloaded on start, so the pins advance with the image rather than with upstream's `server/config/binaries.js` (see `UPDATING.md`)
-
-## What Is Unchanged from Upstream
-
-- Speed test execution (Ookla, LibreSpeed, Cloudflare)
-- Statistics dashboard and data visualization
-- Cron-based test scheduling
-- Multi-server support
-- Notification integrations (Discord, Gotify, Pushover, Telegram, webhooks)
-- Health check monitoring (email, Signal, WhatsApp, Telegram)
-- Prometheus metrics endpoint
-- Grafana integration
-- Admin password protection
-- Data retention settings
-- SQLite database storage
-
-## Contributing
-
-Build and development workflow follow the StartOS packaging guide: <https://docs.start9.com/packaging>. Keep `README.md`, `instructions.md`, and `AGENTS.md` in sync with any change to user-visible behavior or package structure.
+1. **No StartOS-side configuration.** No actions, no file models — everything is in MySpeed's interface.
+2. **A lost admin password cannot be reset** except by editing the database directly.
+3. **Results are measured from inside a container**, so they can differ slightly from a bare-metal test on the same line.
+4. **Speed tests are third-party transfers** and disclose your IP to the provider you select.
+5. **The speed-test clients are pinned at build time**, so updating them is a package change rather than something the application does for itself.
+6. **The image is a third-party build** of MySpeed, not the upstream project's own publication.
 
 ---
 
 ## Quick Reference for AI Consumers
 
 ```yaml
-package_id: my-speed
-image: custom Dockerfile (germannewsmaker/myspeed + tini + bundled speed-test CLIs)
-architectures: [x86_64, aarch64]
+package_id: my-speed # note: the repo is myspeed-startos
+image: built from ./Dockerfile # FROM a published MySpeed image, plus pinned speedtest CLIs
+architectures:
+  - x86_64
+  - aarch64
+subcontainers:
+  - main # runAsInit: true, tini as PID 1
 volumes:
-  main: /myspeed/data
-ports:
-  ui: 5216
-dependencies: none
-startos_managed_env_vars: none
-actions: none
+  main: /myspeed/data # SQLite: history, settings, notification channels, admin password
+file_models: [] # nothing is managed by the package
+startos_managed_env_vars: []
+dependencies: [] # but speed tests require internet
+interfaces:
+  ui: { type: ui, port: 5216 } # MySpeed's own login; no gate added by StartOS
+actions: []
+tasks: []
 health_checks:
-  - checkPortListening:5216: web_interface (30s grace period)
-backup_volumes:
-  - main (full volume)
-configuration: upstream web UI only
-auth: password set via upstream web UI welcome dialog
+  - primary # displayed "Web Interface"; says nothing about test results
 ```
