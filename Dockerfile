@@ -2,6 +2,12 @@ FROM germannewsmaker/myspeed:1.0.9
 
 ARG ARCH
 
+COPY patches /tmp/patches
+# Upstream deltas we carry; patches/README.md says what each one is and what retires it.
+RUN apk add --no-cache patch \
+    && for p in /tmp/patches/*.patch; do echo "applying $p"; patch -d /myspeed -p1 --fuzz=0 < "$p"; done \
+    && rm -rf /tmp/patches
+
 # The upstream image downloads these CLIs on first start. That makes the
 # daemon hang before listening when a provider is unreachable. Download them
 # during the image build instead, and verify the pinned release archives.

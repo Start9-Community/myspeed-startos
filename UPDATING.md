@@ -32,6 +32,9 @@ The `main` image is built locally from `Dockerfile`, which pins a third-party re
 ## Applying the bump
 
 - **`Dockerfile`** — update the `FROM germannewsmaker/myspeed:<version>` line to the new tag.
+- **Carried patches** — re-validate everything in `patches/` against the new image:
+  - Check each patch's **Retire when** condition in [patches/README.md](patches/README.md). A patch upstream has absorbed is deleted, along with its README section — not re-applied.
+  - The Dockerfile applies what remains with `patch -p1 --fuzz=0`, so a patch whose context the bump changed fails the build. That failure is the gate working: re-derive the patch against the new image (or retire it) — never loosen `--fuzz`.
 - **`Dockerfile`** — if `binaries.js` moved either CLI, update that version in the download URL and recompute both per-arch checksums:
 
   ```sh

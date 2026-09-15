@@ -51,6 +51,8 @@ One image, built here on top of a published MySpeed image.
 
 The daemon runs with `runAsInit` so `tini` is PID 1 and reaps the short-lived test processes it spawns.
 
+**The build also applies the patches in `patches/`** to the image's application tree — upstream fixes MySpeed has not released yet, each with the condition that retires it in [patches/README.md](patches/README.md). Currently one: the Gotify integration accepts v3 application tokens (upstream rejects anything but the 15-character v2 format).
+
 ## Volume and Data Layout
 
 One volume, holding everything.
@@ -127,6 +129,7 @@ Nothing in that state is tied to the server it ran on, so a restore needs no rec
 4. **Speed tests are third-party transfers** and disclose your IP to the provider you select.
 5. **The speed-test clients are pinned at build time**, so updating them is a package change rather than something the application does for itself.
 6. **The image is a third-party build** of MySpeed, not the upstream project's own publication.
+7. **The Gotify integration accepts v3 tokens** here, where upstream 1.0.9 accepts only the 15-character v2 format — a carried patch, see `patches/README.md`.
 
 ---
 
@@ -134,7 +137,7 @@ Nothing in that state is tied to the server it ran on, so a restore needs no rec
 
 ```yaml
 package_id: my-speed # note: the repo is myspeed-startos
-image: built from ./Dockerfile # FROM a published MySpeed image, plus pinned speedtest CLIs
+image: built from ./Dockerfile # FROM a published MySpeed image, plus pinned speedtest CLIs and patches/
 architectures:
   - x86_64
   - aarch64

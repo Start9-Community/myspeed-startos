@@ -1,18 +1,18 @@
 import { VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '1.0.9:10',
+  version: '1.0.9:11',
   releaseNotes: {
     en_US:
-      'Bundle speed-test CLIs so startup does not depend on install.speedtest.net',
+      'The Gotify notification channel accepts Gotify v3 application tokens',
     es_ES:
-      'Incluye los CLI de pruebas de velocidad para que el inicio no dependa de install.speedtest.net',
+      'El canal de notificaciones de Gotify acepta tokens de aplicación de Gotify v3',
     de_DE:
-      'Speedtest-CLIs werden gebündelt, damit der Start nicht von install.speedtest.net abhängt',
+      'Der Gotify-Benachrichtigungskanal akzeptiert Gotify-v3-Anwendungstokens',
     pl_PL:
-      'Dołączono CLI testów prędkości, aby start nie zależał od install.speedtest.net',
+      'Kanał powiadomień Gotify akceptuje tokeny aplikacji Gotify w wersji 3',
     fr_FR:
-      'Les CLI de test de débit sont inclus afin que le démarrage ne dépende pas de install.speedtest.net',
+      "Le canal de notification Gotify accepte les jetons d'application Gotify v3",
   },
   migrations: {
     up: async ({ effects }) => {},
