@@ -4,6 +4,12 @@
 
 # MySpeed on StartOS
 
+> [!WARNING]
+> **Unmaintained.** This package has been removed from the Start9 community registries: upstream
+> MySpeed has had no release since May 2024 and no maintainer response to bug reports, and nobody
+> maintains this package. The [GitHub releases](https://github.com/Start9-Community/myspeed-startos/releases)
+> remain for sideloading at your own risk. If you want to take the package over, open an issue.
+
 > Everything not listed in this document should behave the same as upstream
 > MySpeed. If a feature, setting, or behavior is not mentioned here, the
 > upstream documentation is accurate and fully applicable — see the
